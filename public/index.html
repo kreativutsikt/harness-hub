@@ -93,6 +93,14 @@ textarea{min-height:88px;resize:vertical}
 section.board{border-top:1px solid var(--line);margin-top:28px;padding-top:18px}
 .panel-head h2{margin:0 0 8px;font:600 20px/1.2 var(--font);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
 .panel-head h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.shot{display:block;aspect-ratio:16/9;background:var(--soft);overflow:hidden;border-bottom:1px solid var(--line)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .ph{min-height:140px;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;letter-spacing:.12em;color:var(--muted)}
+.linkcard{padding:0;overflow:hidden}
+.linkcard .pad{padding:12px;display:flex;flex-direction:column;gap:8px}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{min-height:36px;padding:8px 10px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--line)}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--accent-fg);border-color:var(--fg)}
 .list{display:flex;flex-direction:column;gap:10px}
 .empty{border:1px dashed var(--line);padding:18px 14px;color:var(--muted)}
 .empty b{display:block;color:var(--fg);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
@@ -162,10 +170,11 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
       <button type="button" id="theme-dark" aria-pressed="true" aria-label="Dark mode on">☾</button>
     </div>
   </div>
-  <div class="here" id="here">When is first. New posts stack under their heading.</div>
+  <div class="here" id="here"></div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" id="t-dates" aria-controls="p-dates" aria-selected="true" data-tab="when">When<span class="n" id="n-dates"></span></button>
     <button class="tab" role="tab" id="t-ideas" aria-controls="p-ideas" aria-selected="false" data-tab="ideas">Ideas<span class="n" id="n-ideas"></span></button>
+    <button class="tab" role="tab" id="t-links" aria-controls="p-links" aria-selected="false" data-tab="links">Links<span class="n" id="n-links"></span></button>
     <button class="tab" role="tab" id="t-showtell" aria-controls="p-showtell" aria-selected="false" data-tab="builds">Builds<span class="n" id="n-showtell"></span></button>
     <button class="tab" role="tab" id="t-prompts" aria-controls="p-prompts" aria-selected="false" data-tab="prompts">Prompts<span class="n" id="n-prompts"></span></button>
   </nav>
@@ -183,7 +192,7 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
       <span class="num">2</span>
       <label><span class="lbl">Group code</span><input id="me-code" type="text" maxlength="60" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Same code for everyone"></label>
     </div>
-    <p class="hint" id="hint">Type your name to join. Everyone uses this same link and the same code. The row above jumps to a heading.</p>
+    <p class="hint" id="hint">Type your name to join. Everyone uses this same link and the same code.</p>
     <p class="room" id="room">In the room: no one yet.</p>
   </section>
 
@@ -213,6 +222,21 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
       <button class="primary" type="submit">Post idea</button>
     </form>
     <div id="ideas-list" class="list"></div>
+  </section>
+
+  <section id="p-links" role="tabpanel" aria-labelledby="t-links" class="list board">
+    <div class="panel-head">
+      <h2 id="links">Links</h2>
+      <p class="lead">Drop a link. The card picks up the title, image, and what kind of page it is.</p>
+    </div>
+    <form class="composer" id="links-form">
+      <label class="field"><span>Link</span><input id="l-url" type="url" required maxlength="500" placeholder="https://"></label>
+      <div id="l-preview" hidden></div>
+      <label class="field"><span>Note, if you want one</span><input id="l-note" type="text" maxlength="160" placeholder="Why the room should open it"></label>
+      <button class="primary" type="submit">Share link</button>
+    </form>
+    <div id="link-filters" class="filters"></div>
+    <div id="links-list" class="list"></div>
   </section>
 
   <section id="p-showtell" role="tabpanel" aria-labelledby="t-showtell" class="list board">
@@ -254,12 +278,24 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
 
 <script>
 (function(){
-  var COLLS=['dates','votes','projects','ideas','ideaVotes','prompts'];
-  var S={dates:[],votes:[],projects:[],ideas:[],ideaVotes:[],prompts:[]};
+  var COLLS=['dates','votes','projects','ideas','ideaVotes','prompts','links'];
+  var S={dates:[],votes:[],projects:[],ideas:[],ideaVotes:[],prompts:[],links:[]};
   var loaded={};
   var db=null,uid=null,canWrite=true,isAdmin=false,ready=false;
   var tab='ideas';
-  var PANEL={ideas:'ideas',builds:'showtell',prompts:'prompts',when:'dates'};
+  var PANEL={ideas:'ideas',builds:'showtell',prompts:'prompts',when:'dates',links:'links'};
+  var DAYLINES=[
+    'What should we meet about?',
+    'Bring one link that changed how you work.',
+    'What is worth building next?',
+    'Who has something to show?',
+    'What problem is still stuck?',
+    'Which prompt is worth copying?',
+    'What did you try this week?'
+  ];
+  var CATS={article:'Article',video:'Video',code:'Code',social:'Social',shopping:'Shopping',web:'Web'};
+  var linkPick='';
+  var linkPreview=null;
   var HERE={
     ideas:'Showing ideas',
     builds:'Showing builds',
@@ -456,6 +492,97 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     });
   }
 
+  function guessCategory(url){
+    var hostName='';
+    try{hostName=new URL(url).hostname.replace(/^www\./,'').toLowerCase();}catch(e){return 'web';}
+    function hit(list){return list.some(function(d){return hostName===d||hostName.slice(-(d.length+1))==='.'+d;});}
+    if(hit(['youtube.com','youtu.be','vimeo.com','twitch.tv','tiktok.com'])) return 'video';
+    if(hit(['github.com','gitlab.com','bitbucket.org','codeberg.org'])) return 'code';
+    if(hit(['twitter.com','x.com','reddit.com','bsky.app','mastodon.social'])) return 'social';
+    if(hit(['amazon.com','amazon.co.uk','amazon.se','etsy.com','ebay.com'])||hostName.indexOf('shop')!==-1) return 'shopping';
+    if(hostName.indexOf('medium.com')!==-1||hostName.indexOf('substack.com')!==-1) return 'article';
+    return 'web';
+  }
+  function shotFor(url, image){
+    var shot=h('div',{class:'shot'});
+    var letters=(host(url)||'??').slice(0,2).toUpperCase();
+    function ph(){shot.append(h('div',{class:'ph',text:letters}));}
+    if(safeUrl(image)){
+      var im=h('img',{src:image,alt:'',referrerpolicy:'no-referrer'});
+      im.addEventListener('error',function(){im.remove();ph();});
+      shot.append(im);
+    } else ph();
+    return shot;
+  }
+  function linkCard(item, preview){
+    var url=safeUrl(item.url)||'';
+    var cat=CATS[item.category]?item.category:guessCategory(url);
+    var card=h('div',{class:'card linkcard'});
+    var open=url?h('a',{href:url,target:'_blank',rel:'noopener noreferrer'}):h('div');
+    open.append(shotFor(url, item.image));
+    card.append(open);
+    card.append(h('div',{class:'pad'},
+      h('div',{class:'row'},
+        h('span',{class:'chip',text:CATS[cat]||'Web'}),
+        item.industry?h('span',{class:'chip sig',text:item.industry}):null),
+      h('h3',{text:item.title||host(url)||'Link'}),
+      item.description?h('p',{text:item.description}):null,
+      item.note?h('p',{text:item.note}):null,
+      h('div',{class:'row end'},
+        h('span',{class:'meta',text:(host(url)||'')+(preview?'':' · by '+(item.name||'Someone'))}),
+        (!preview&&canDelete(item))?delBtn(function(){del('links',item.id)}):null)
+    ));
+    return card;
+  }
+  function renderLinks(){
+    var box=$('links-list'), filters=$('link-filters');
+    box.textContent=''; filters.textContent='';
+    if(!loaded.links){box.append(empty('Loading','Fetching links.'));return;}
+    var items=S.links.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
+    var cats={}, inds={};
+    items.forEach(function(it){
+      it._cat=CATS[it.category]?it.category:guessCategory(it.url);
+      cats[it._cat]=CATS[it._cat];
+      if(it.industry) inds[it.industry]=1;
+    });
+    if(linkPick && !items.some(function(it){return linkPick==='c:'+it._cat||linkPick==='i:'+it.industry;})) linkPick='';
+    if(items.length){
+      function chip(id, label){
+        var b=h('button',{type:'button',text:label,'aria-pressed':linkPick===id?'true':'false'});
+        b.addEventListener('click',function(){linkPick=linkPick===id?'':id; render();});
+        filters.append(b);
+      }
+      chip('','All');
+      Object.keys(cats).forEach(function(c){chip('c:'+c, cats[c]);});
+      Object.keys(inds).forEach(function(name){chip('i:'+name, name);});
+    }
+    var shown=items.filter(function(it){
+      if(!linkPick) return true;
+      if(linkPick.indexOf('c:')===0) return linkPick==='c:'+it._cat;
+      return linkPick==='i:'+it.industry;
+    });
+    if(!shown.length){box.append(empty(items.length?'Nothing in this filter':'No links yet', items.length?'Choose All to see every link.':'Paste a URL above.'));return;}
+    shown.forEach(function(it){box.append(linkCard(it,false));});
+  }
+  async function previewLink(url){
+    var box=$('l-preview');
+    if(!safeUrl(url)){box.hidden=true;box.textContent='';linkPreview=null;return;}
+    try{
+      var r=await fetch('/api/unfurl',{method:'POST',headers:{'content-type':'application/json','x-group-code':($('me-code').value||'').trim()},body:JSON.stringify({url:url})});
+      if(!r.ok) throw new Error('unfurl');
+      var o=await r.json();
+      if(($('l-url').value||'').trim()!==url) return;
+      linkPreview=o;
+      box.hidden=false; box.textContent='';
+      box.append(linkCard({url:o.url||url,title:o.title,description:o.description,image:o.image,industry:o.industry,category:o.category,note:''}, true));
+    }catch(e){
+      if(($('l-url').value||'').trim()!==url) return;
+      linkPreview={url:url,title:host(url),description:'',image:'',industry:'',category:guessCategory(url),domain:host(url),siteName:''};
+      box.hidden=false; box.textContent='';
+      box.append(linkCard(linkPreview, true));
+    }
+  }
+
   function roomNames(){
     var seen={}, out=[];
     function add(name){
@@ -468,6 +595,7 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     S.ideas.forEach(function(i){add(i.name)});
     S.projects.forEach(function(p){add(p.name)});
     S.prompts.forEach(function(p){add(p.name)});
+    S.links.forEach(function(p){add(p.name)});
     S.dates.forEach(function(d){add(d.name)});
     S.votes.forEach(function(v){add(v.name)});
     return out;
@@ -480,18 +608,19 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     $('room').textContent=names.length?('In the room ('+names.length+'): '+names.join(' · ')):'In the room: no one yet.';
     var name=myName();
     $('hint').textContent=name
-      ?('You are in as '+name+'. New posts stack under their heading and push the next section down.')
-      :'Type your name to join. Everyone uses this same link and the same code. The row above jumps to a heading.';
+      ?('You are in as '+name+'.')
+      :'Type your name to join. Everyone uses this same link and the same code.';
     var live=S.dates.filter(function(d){return d.date>=ymd(new Date())}).length;
     $('n-dates').textContent=loaded.dates&&live?(' '+live):'';
     $('n-showtell').textContent=loaded.projects&&S.projects.length?(' '+S.projects.length):'';
     $('n-ideas').textContent=loaded.ideas&&S.ideas.length?(' '+S.ideas.length):'';
     $('n-prompts').textContent=loaded.prompts&&S.prompts.length?(' '+S.prompts.length):'';
+    $('n-links').textContent=loaded.links&&S.links.length?(' '+S.links.length):'';
   }
   var raf=0;
   function render(){
     if(raf)return;
-    raf=requestAnimationFrame(function(){raf=0;renderDates();renderProjects();renderIdeas();renderPrompts();chrome();});
+    raf=requestAnimationFrame(function(){raf=0;renderDates();renderProjects();renderIdeas();renderPrompts();renderLinks();chrome();});
   }
 
   function applyTheme(mode){
@@ -552,6 +681,21 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     var ok=await add('prompts',{title:title,tool:($('r-tool').value||'').trim(),body:body,name:myName(),uid:uid,ts:ts()});
     if(ok){e.target.reset();toast('Prompt shared.');}
   });
+  var linkWait;
+  $('l-url').addEventListener('input',function(){
+    clearTimeout(linkWait);
+    var url=($('l-url').value||'').trim();
+    linkWait=setTimeout(function(){previewLink(url);},450);
+  });
+  $('links-form').addEventListener('submit',async function(e){
+    e.preventDefault();if(needName())return;
+    var url=($('l-url').value||'').trim();
+    if(!safeUrl(url))return;
+    var meta=(linkPreview&&(linkPreview.url===url||($('l-url').value||'').trim()===url))?linkPreview:{url:url,title:host(url),description:'',image:'',industry:'',category:guessCategory(url),domain:host(url),siteName:''};
+    var saved=safeUrl(meta.url)||url;
+    var ok=await add('links',{url:saved,title:meta.title||host(saved),description:meta.description||'',image:safeUrl(meta.image)||'',siteName:meta.siteName||'',domain:meta.domain||host(saved),category:CATS[meta.category]?meta.category:guessCategory(saved),industry:meta.industry||'',note:($('l-note').value||'').trim(),name:myName(),uid:uid,ts:ts()});
+    if(ok){e.target.reset();linkPreview=null;$('l-preview').hidden=true;$('l-preview').textContent='';toast('Link shared.');}
+  });
 
   var last='',offlineToldOnce=false;
   function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
@@ -594,6 +738,9 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   $('me-code').value=lsGet('hh_code')||'';
   $('me-code').addEventListener('input',function(){lsSet('hh_code',($('me-code').value||'').trim())});
   async function init(){
+    var now=new Date(), start=new Date(now.getFullYear(),0,0);
+    var day=Math.floor((now-start)/86400000);
+    $('here').textContent=DAYLINES[((day%DAYLINES.length)+DAYLINES.length)%DAYLINES.length];
     var fromHash=canonTab((location.hash||'').replace('#',''));
     showTab(fromHash||'when', !!fromHash);
     uid=localId();db=makeDb();ready=true;
