@@ -5,184 +5,218 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Harness Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Field-notebook ledger: one narrow column, ruled rows, mono labels, spruce ink with an amber signal for "best". */
+/* Omarchy RetroPC: amber phosphor on near-black. */
 :root{
-  color-scheme:light;
-  --bg:#EDF0EA; --surface:#F9FAF6; --fg:#16201A; --muted:#58665D; --line:#D0D8CE;
-  --accent:#1E5B44; --accent-fg:#FFFFFF; --accent-soft:#DCE9E1; --signal:#B86E0A; --signal-soft:#F5E6CC;
-  --danger:#A83A2E; --focus:#1E5B44;
-  --font-display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
-  --font-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
-  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0E1411; --surface:#161F19; --fg:#E5ECE6; --muted:#93A297; --line:#27342B;
-    --accent:#5FBF98; --accent-fg:#08130E; --accent-soft:#1B3328; --signal:#E3A340; --signal-soft:#3A2D12;
-    --danger:#E5857A; --focus:#5FBF98; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0E1411; --surface:#161F19; --fg:#E5ECE6; --muted:#93A297; --line:#27342B;
-  --accent:#5FBF98; --accent-fg:#08130E; --accent-soft:#1B3328; --signal:#E3A340; --signal-soft:#3A2D12;
-  --danger:#E5857A; --focus:#5FBF98; color-scheme:dark;
+  color-scheme:dark;
+  --bg:#0a0a08; --surface:#120f0a; --fg:#ffb000; --muted:#c4922a; --line:#5c4a12;
+  --accent:#ffcc00; --accent-fg:#0a0a08; --soft:#2a1f00; --hot:#ff8800;
+  --danger:#ff7744; --focus:#ffcc00;
+  --font:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--font-body);padding-inline:16px;padding-block:0 40px}
-.wrap{max-width:640px;margin-inline:auto}
-header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 0;border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px}
-.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;max-width:640px;margin-inline:auto}
-h1{font:700 26px/1.1 var(--font-display);letter-spacing:-.01em;margin:0;text-wrap:balance}
-.tag{font:400 12px/1.3 var(--font-mono);color:var(--muted);text-align:right}
-nav.tabs{display:flex;gap:2px;max-width:640px;margin:10px auto 0;overflow-x:auto;scrollbar-width:none}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.45 var(--font);
+  padding:0 14px 48px;
+}
+body::before{
+  content:"";pointer-events:none;position:fixed;inset:0;z-index:40;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);
+  opacity:.35;
+}
+.wrap{max-width:720px;margin:0 auto;position:relative;z-index:1}
+header.top{
+  position:sticky;top:0;z-index:5;
+  background:rgba(10,10,8,.94);
+  border-bottom:1px solid var(--line);
+  margin:0 -14px;padding:12px 14px 0;
+  backdrop-filter:blur(6px);
+}
+.brand{display:flex;justify-content:space-between;align-items:baseline;gap:12px;max-width:720px;margin:0 auto}
+h1{margin:0;font:600 18px/1 var(--font);letter-spacing:.14em;text-transform:uppercase}
+.live{font-size:12px;letter-spacing:.16em;color:var(--accent)}
+.live::before{content:"";display:inline-block;width:7px;height:7px;margin-right:6px;background:var(--accent);box-shadow:0 0 8px var(--accent);vertical-align:1px}
+.here{max-width:720px;margin:8px auto 0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+nav.tabs{display:flex;gap:6px;max-width:720px;margin:10px auto 0;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
-.tab{flex:1 0 auto;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:500 14px/1 var(--font-body);padding:12px 12px 11px;cursor:pointer;white-space:nowrap}
-.tab .n{font:400 12px var(--font-mono);margin-left:6px;color:var(--muted)}
-.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
-.tab:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-main{display:flex;flex-direction:column;gap:16px;padding-block:18px}
-.notice{border:1px solid var(--signal);background:var(--signal-soft);color:var(--fg);padding:10px 12px;font-size:14px}
-.me{display:flex;align-items:center;gap:10px}
-.me label{font:500 12px var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
-input,select,textarea{width:100%;min-width:0;font:16px/1.4 var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);padding:10px 12px;border-radius:4px}
-textarea{min-height:92px;resize:vertical}
-input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-.lead{margin:0;color:var(--muted);max-width:60ch}
-.list{display:flex;flex-direction:column;gap:12px}
-.empty{border:1px dashed var(--line);padding:22px 16px;color:var(--muted);text-align:left}
-.empty b{display:block;color:var(--fg);font:600 16px var(--font-display);margin-bottom:2px}
-.card{background:var(--surface);border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
-.card h3{font:600 17px/1.25 var(--font-display);margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.tab{
+  flex:1 0 auto;cursor:pointer;white-space:nowrap;
+  background:transparent;color:var(--muted);
+  border:1px solid var(--line);border-bottom:0;
+  font:500 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;
+  padding:12px 12px 10px;min-height:44px;
+}
+.tab .n{margin-left:6px;color:inherit}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--accent-fg);border-color:var(--fg)}
+.tab:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--focus);outline-offset:2px;
+}
+main{display:flex;flex-direction:column;gap:14px;padding-top:16px}
+.join{
+  border:1px solid var(--line);background:var(--surface);
+  padding:12px;display:flex;flex-direction:column;gap:10px;
+}
+.step{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center}
+.num{font-size:12px;color:var(--accent)}
+.step label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.step span.lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hint,.room,.lead{margin:0;color:var(--muted);font-size:13px}
+.room{color:var(--fg)}
+.notice{border:1px solid var(--hot);background:var(--soft);padding:10px 12px;font-size:14px}
+input,select,textarea{
+  width:100%;min-width:0;font:16px/1.4 var(--font);color:var(--fg);
+  background:#0a0a08;border:1px solid var(--line);padding:10px 12px;border-radius:0;
+}
+textarea{min-height:88px;resize:vertical}
+.panel-head h2{margin:0;font:600 20px/1.2 var(--font);letter-spacing:.12em;text-transform:uppercase}
+.list{display:flex;flex-direction:column;gap:10px}
+.empty{border:1px dashed var(--line);padding:18px 14px;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.card{background:var(--surface);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font:600 16px/1.3 var(--font);overflow-wrap:anywhere}
 .card p{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
-.meta{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font:400 12px var(--font-mono);color:var(--muted)}
-.chip{font:500 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);padding:2px 7px;color:var(--muted);border-radius:2px}
-.chip.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.chip.sig{background:var(--signal-soft);border-color:var(--signal);color:var(--signal)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:12px;color:var(--muted)}
+.chip{font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:2px 6px;color:var(--muted)}
+.chip.ok{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+.chip.sig{background:var(--soft);border-color:var(--hot);color:var(--hot)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row.end{justify-content:space-between}
-button{font:500 14px/1 var(--font-body);cursor:pointer;border-radius:4px;padding:11px 14px;min-height:44px}
-button.primary{background:var(--accent);color:var(--accent-fg);border:1px solid var(--accent)}
+button{font:500 14px/1 var(--font);cursor:pointer;border-radius:0;padding:12px 14px;min-height:44px;letter-spacing:.04em}
+button.primary{background:var(--fg);color:var(--accent-fg);border:1px solid var(--fg)}
 button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
 button.sm{min-height:36px;padding:8px 10px;font-size:13px}
 button.danger{color:var(--danger);border-color:var(--danger)}
-button:disabled{opacity:.5;cursor:not-allowed}
-.dateCard{display:grid;grid-template-columns:64px 1fr;gap:14px}
-.dblock{border:1px solid var(--line);text-align:center;padding:8px 0;align-self:start;font-family:var(--font-mono)}
-.dblock .d{display:block;font:700 26px/1 var(--font-display)}
-.dblock .m{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px}
-.dateCard.best{border-color:var(--signal);box-shadow:inset 4px 0 0 var(--signal)}
-.dateCard.best .dblock{border-color:var(--signal)}
-.votes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.votes button{background:var(--surface);border:1px solid var(--line);color:var(--fg)}
-.votes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.votes button.no[aria-pressed="true"]{background:var(--muted);border-color:var(--muted);color:var(--surface)}
-.who{font:400 12px/1.5 var(--font-mono);color:var(--muted);display:flex;flex-direction:column;gap:2px}
-.who b{color:var(--fg);font-weight:500}
-details.add{border:1px solid var(--line);background:var(--surface)}
-details.add>summary{list-style:none;cursor:pointer;padding:13px 14px;font:600 15px var(--font-body);min-height:44px;display:flex;justify-content:space-between;align-items:center}
-details.add>summary::-webkit-details-marker{display:none}
-details.add>summary::after{content:"+";font:500 20px var(--font-mono);color:var(--accent)}
-details.add[open]>summary::after{content:"\2212"}
-details.add form{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px}
-fieldset{border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:10px}
+button:disabled{opacity:.45;cursor:not-allowed}
+form.composer{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);background:var(--surface);padding:12px}
 .field{display:flex;flex-direction:column;gap:4px}
-.field>span{font:500 12px var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.field>span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .check{display:flex;gap:10px;align-items:center;font-size:14px}
 .check input{width:20px;height:20px;padding:0;accent-color:var(--accent)}
-.up{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px}
-.up button{width:52px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--surface);border:1px solid var(--line);color:var(--fg);padding:6px}
-.up button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.up .n{font:500 15px var(--font-mono)}
-.ideaCard{display:grid;grid-template-columns:52px 1fr;gap:14px}
-pre.body{margin:0;padding:12px;background:var(--bg);border:1px solid var(--line);font:13px/1.55 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere}
-details.prompt>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:6px;min-height:44px}
+.dateCard{display:grid;grid-template-columns:64px 1fr;gap:12px}
+.dblock{border:1px solid var(--line);text-align:center;padding:8px 0;align-self:start}
+.dblock .d{display:block;font:600 24px/1 var(--font)}
+.dblock .m{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.dateCard.best{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.votes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.votes button{background:#0a0a08;border:1px solid var(--line);color:var(--fg)}
+.votes button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--accent-fg)}
+.votes button.no[aria-pressed="true"]{background:var(--hot);border-color:var(--hot);color:#0a0a08}
+.who{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.who b{color:var(--fg);font-weight:500}
+.up{display:flex;flex-direction:column;align-items:center}
+.up button{
+  width:52px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:#0a0a08;border:1px solid var(--line);color:var(--fg);padding:6px;
+}
+.up button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--accent-fg)}
+.up .n{font-size:15px}
+.ideaCard{display:grid;grid-template-columns:52px 1fr;gap:12px}
+pre.body{margin:0;padding:12px;background:#0a0a08;border:1px solid var(--line);font:13px/1.5 var(--font);white-space:pre-wrap;overflow-wrap:anywhere}
+details.prompt>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:6px}
 details.prompt>summary::-webkit-details-marker{display:none}
-details.prompt[open]>summary{margin-bottom:10px}
 a.link{color:var(--accent);overflow-wrap:anywhere}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 16px;font-size:14px;max-width:calc(100vw - 32px);z-index:20;border-radius:4px}
-@media (prefers-reduced-motion:no-preference){.tab{transition:color .15s,border-color .15s}}
-@media (max-width:380px){.two{grid-template-columns:1fr}}
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  background:var(--fg);color:var(--accent-fg);
+  padding:12px 14px;font-size:14px;max-width:calc(100vw - 28px);z-index:50;
+}
+@media (max-width:420px){.two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="brand">
     <h1>Harness Hub</h1>
-    <div class="tag">learn it · build it · show it</div>
+    <div class="live">LIVE</div>
   </div>
+  <div class="here" id="here">Showing ideas</div>
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="t-dates" aria-controls="p-dates" aria-selected="true" data-tab="dates">Dates<span class="n" id="n-dates"></span></button>
-    <button class="tab" role="tab" id="t-showtell" aria-controls="p-showtell" aria-selected="false" data-tab="showtell">Show &amp; tell<span class="n" id="n-showtell"></span></button>
-    <button class="tab" role="tab" id="t-ideas" aria-controls="p-ideas" aria-selected="false" data-tab="ideas">Ideas<span class="n" id="n-ideas"></span></button>
+    <button class="tab" role="tab" id="t-ideas" aria-controls="p-ideas" aria-selected="true" data-tab="ideas">Ideas<span class="n" id="n-ideas"></span></button>
+    <button class="tab" role="tab" id="t-showtell" aria-controls="p-showtell" aria-selected="false" data-tab="showtell">Builds<span class="n" id="n-showtell"></span></button>
     <button class="tab" role="tab" id="t-prompts" aria-controls="p-prompts" aria-selected="false" data-tab="prompts">Prompts<span class="n" id="n-prompts"></span></button>
+    <button class="tab" role="tab" id="t-dates" aria-controls="p-dates" aria-selected="false" data-tab="dates">When<span class="n" id="n-dates"></span></button>
   </nav>
 </header>
 
 <div class="wrap">
 <main>
   <div id="banner" class="notice" hidden></div>
-  <div class="me"><label for="me-name">Your name</label><input id="me-name" type="text" maxlength="40" autocomplete="nickname" placeholder="Shown next to what you add"></div>
-  <div class="me" id="code-row" hidden><label for="me-code">Group code</label><input id="me-code" type="text" maxlength="60" autocomplete="off" autocapitalize="none" placeholder="From the Signal group"></div>
+  <section class="join" aria-label="Join the room">
+    <div class="step">
+      <span class="num">1</span>
+      <label><span class="lbl">Your name</span><input id="me-name" type="text" maxlength="40" autocomplete="nickname" placeholder="How the room should know you"></label>
+    </div>
+    <div class="step" id="code-row" hidden>
+      <span class="num">2</span>
+      <label><span class="lbl">Group code</span><input id="me-code" type="text" maxlength="60" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Same code for everyone"></label>
+    </div>
+    <p class="hint" id="hint">The tabs are sections, not seats. Type your name to join. All ten people use this same link and the same code.</p>
+    <p class="room" id="room">In the room: no one yet.</p>
+  </section>
 
-  <section id="p-dates" role="tabpanel" aria-labelledby="t-dates" class="list">
-    <p class="lead">Propose a few dates, then mark every one you can make. The date most people can do floats to the top.</p>
-    <div id="dates-list" class="list"><div class="empty"><b>Loading dates</b>Fetching what the group has proposed.</div></div>
-    <details class="add" id="dates-add"><summary>Propose a date</summary>
-      <form id="dates-form"><fieldset class="f">
-        <div class="two">
-          <label class="field"><span>Date</span><input id="d-date" type="date" required></label>
-          <label class="field"><span>Time</span><input id="d-time" type="time"></label>
-        </div>
-        <label class="field"><span>Where or how</span><input id="d-note" type="text" maxlength="120" placeholder="Video call, someone's workshop, a café"></label>
-        <button class="primary" type="submit">Add date</button>
-      </fieldset></form>
-    </details>
+  <section id="p-ideas" role="tabpanel" aria-labelledby="t-ideas" class="list">
+    <div class="panel-head">
+      <h2>Ideas</h2>
+      <p class="lead">Any problem, question, or thing worth building. Any industry. Tap the arrow to vote. The top ones become the agenda.</p>
+    </div>
+    <form class="composer" id="ideas-form">
+      <label class="field"><span>Your idea</span><textarea id="i-text" required maxlength="400" placeholder="Something the room should talk about"></textarea></label>
+      <button class="primary" type="submit">Post idea</button>
+    </form>
+    <div id="ideas-list" class="list"></div>
   </section>
 
   <section id="p-showtell" role="tabpanel" aria-labelledby="t-showtell" class="list" hidden>
-    <p class="lead">What have you built, or what are you building? Add it here so we know who to ask and what to demo.</p>
+    <div class="panel-head">
+      <h2>Builds</h2>
+      <p class="lead">What you have made, or are making. Add it when you want the room to see it. Any field is fine.</p>
+    </div>
+    <form class="composer" id="projects-form">
+      <label class="field"><span>Name</span><input id="p-title" type="text" required maxlength="80" placeholder="What you built"></label>
+      <div class="two">
+        <label class="field"><span>Industry</span><input id="p-ind" type="text" maxlength="40" placeholder="Any industry"></label>
+        <label class="field"><span>Status</span><select id="p-status"><option value="idea">Idea</option><option value="building" selected>Building</option><option value="working">Working</option></select></label>
+      </div>
+      <label class="field"><span>What it does</span><textarea id="p-what" maxlength="600" placeholder="The problem, and what you used"></textarea></label>
+      <label class="field"><span>Link, if you have one</span><input id="p-link" type="url" maxlength="300" placeholder="https://"></label>
+      <label class="check"><input id="p-demo" type="checkbox"> I can show this at the meetup</label>
+      <button class="primary" type="submit">Add build</button>
+    </form>
     <div id="projects-list" class="list"></div>
-    <details class="add"><summary>Add what you built</summary>
-      <form id="projects-form"><fieldset class="f">
-        <label class="field"><span>Name</span><input id="p-title" type="text" required maxlength="80" placeholder="Harvest log, quote generator, shift bot"></label>
-        <div class="two">
-          <label class="field"><span>Industry</span><input id="p-ind" type="text" maxlength="40" list="inds" placeholder="Agriculture"></label>
-          <label class="field"><span>Status</span><select id="p-status"><option value="idea">Idea</option><option value="building" selected>Building</option><option value="working">Working</option></select></label>
-        </div>
-        <datalist id="inds"><option>Agriculture</option><option>Construction</option><option>Healthcare</option><option>Education</option><option>Retail</option><option>Finance</option><option>Manufacturing</option><option>Creative</option><option>Legal</option><option>IT</option><option>Hospitality</option><option>Logistics</option></datalist>
-        <label class="field"><span>What it does</span><textarea id="p-what" maxlength="600" placeholder="The problem, what you used, how it fits your day"></textarea></label>
-        <label class="field"><span>Link (optional)</span><input id="p-link" type="url" maxlength="300" placeholder="https://"></label>
-        <label class="check"><input id="p-demo" type="checkbox"> I can demo this at the first meetup</label>
-        <button class="primary" type="submit">Add to the board</button>
-      </fieldset></form>
-    </details>
-  </section>
-
-  <section id="p-ideas" role="tabpanel" aria-labelledby="t-ideas" class="list" hidden>
-    <p class="lead">Problems you would like AI to solve, or things you want to learn. Vote with the arrow; the top ones become our agenda.</p>
-    <div id="ideas-list" class="list"></div>
-    <details class="add"><summary>Add an idea</summary>
-      <form id="ideas-form"><fieldset class="f">
-        <label class="field"><span>Idea or question</span><textarea id="i-text" required maxlength="400" placeholder="A dashboard that pulls our sensor data into one view"></textarea></label>
-        <button class="primary" type="submit">Post idea</button>
-      </fieldset></form>
-    </details>
   </section>
 
   <section id="p-prompts" role="tabpanel" aria-labelledby="t-prompts" class="list" hidden>
-    <p class="lead">Prompts, automations and setups that worked for you. Tap one to open it, then copy.</p>
+    <div class="panel-head">
+      <h2>Prompts</h2>
+      <p class="lead">A prompt or setup that worked for you. Open it, then copy.</p>
+    </div>
+    <form class="composer" id="prompts-form">
+      <label class="field"><span>Title</span><input id="r-title" type="text" required maxlength="80" placeholder="What this is for"></label>
+      <label class="field"><span>Tool</span><input id="r-tool" type="text" maxlength="40" placeholder="Claude, ChatGPT, Cursor"></label>
+      <label class="field"><span>The prompt or steps</span><textarea id="r-body" required maxlength="3000" placeholder="Paste it as you use it"></textarea></label>
+      <button class="primary" type="submit">Share prompt</button>
+    </form>
     <div id="prompts-list" class="list"></div>
-    <details class="add"><summary>Share a prompt or setup</summary>
-      <form id="prompts-form"><fieldset class="f">
-        <label class="field"><span>Title</span><input id="r-title" type="text" required maxlength="80" placeholder="Turn a voice note into a harvest record"></label>
-        <label class="field"><span>Tool</span><input id="r-tool" type="text" maxlength="40" placeholder="Claude, ChatGPT, Cursor, n8n"></label>
-        <label class="field"><span>The prompt or steps</span><textarea id="r-body" required maxlength="3000" placeholder="Paste it as you use it"></textarea></label>
-        <button class="primary" type="submit">Share it</button>
-      </fieldset></form>
-    </details>
+  </section>
+
+  <section id="p-dates" role="tabpanel" aria-labelledby="t-dates" class="list" hidden>
+    <div class="panel-head">
+      <h2>When</h2>
+      <p class="lead">Suggest a time, then vote on every option. The date most people can do is marked best.</p>
+    </div>
+    <form class="composer" id="dates-form">
+      <div class="two">
+        <label class="field"><span>Date</span><input id="d-date" type="date" required></label>
+        <label class="field"><span>Time</span><input id="d-time" type="time"></label>
+      </div>
+      <label class="field"><span>Where or how</span><input id="d-note" type="text" maxlength="120" placeholder="Video call, office, café"></label>
+      <button class="primary" type="submit">Add a time</button>
+    </form>
+    <div id="dates-list" class="list"></div>
   </section>
 </main>
 </div>
@@ -194,7 +228,13 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   var S={dates:[],votes:[],projects:[],ideas:[],ideaVotes:[],prompts:[]};
   var loaded={};
   var db=null,uid=null,canWrite=true,isAdmin=false,ready=false;
-  var tab='dates';
+  var tab='ideas';
+  var HERE={
+    ideas:'Showing ideas',
+    showtell:'Showing builds',
+    prompts:'Showing prompts',
+    dates:'Showing when to meet'
+  };
 
   function $(id){return document.getElementById(id)}
   function h(tag,props){
@@ -228,10 +268,9 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
   function ts(){return Date.now()}
 
-  /* ---------- writes ---------- */
   function fail(e){
     var c=e&&e.code;
-    if(c==='need_code'){toast('Enter the group code at the top first.');$('code-row').hidden=false;$('me-code').focus();}
+    if(c==='need_code'){toast('Enter the group code first.');$('code-row').hidden=false;$('me-code').focus();}
     else if(c==='invalid_data')toast('That entry is too long or not valid.');
     else if(c==='quota_exceeded')toast('The hub is full. Delete something old first.');
     else if(c==='resource_exhausted')toast('Slow down a little and try again.');
@@ -239,7 +278,7 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   }
   function needName(){
     if(myName())return false;
-    toast('Add your name at the top first.');$('me-name').focus();return true;
+    toast('Type your name at the top first.');$('me-name').focus();return true;
   }
   async function add(coll,data){
     if(!writable()){toast('Adding is switched off for you here.');return false;}
@@ -269,7 +308,6 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     await putDoc('ideaVotes',ideaId+'_'+uid,{ideaId:ideaId,uid:uid,ts:ts()});
   }
 
-  /* ---------- pieces ---------- */
   function canDelete(item){return writable()&&(isAdmin||item.uid===uid)}
   function delBtn(fn){
     var b=h('button',{class:'ghost sm',type:'button',text:'Delete'});var armed=false,t;
@@ -283,13 +321,12 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:null}
   function host(u){try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u}}
 
-  /* ---------- renderers ---------- */
   function renderDates(){
     var box=$('dates-list');box.textContent='';
-    if(!loaded.dates){box.append(empty('Loading dates','Fetching what the group has proposed.'));return;}
+    if(!loaded.dates){box.append(empty('Loading','Fetching times the room has suggested.'));return;}
     var today=ymd(new Date());
     var items=S.dates.filter(function(d){return d.date>=today}).sort(function(a,b){var x=a.date+(a.time||''),y=b.date+(b.time||'');return x<y?-1:x>y?1:0});
-    if(!items.length){box.append(empty('No dates yet','Open “Propose a date” below and add two or three options for the first meetup.'));return;}
+    if(!items.length){box.append(empty('No times yet','Add two or three options. Everyone votes on each one.'));return;}
     var scored=items.map(function(d){
       var vs=S.votes.filter(function(v){return v.dateId===d.id});
       var yes=vs.filter(function(v){return v.state==='yes'}),maybe=vs.filter(function(v){return v.state==='maybe'}),no=vs.filter(function(v){return v.state==='no'});
@@ -303,34 +340,33 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
       var best=top>0&&s.score===top&&scored.length>1;
       function vb(state,label,cls){return h('button',{type:'button',class:cls||'',text:label,'aria-pressed':cur===state?'true':'false',disabled:!writable(),onclick:function(){setVote(d.id,state)}});}
       function names(label,arr){return arr.length?h('div',null,h('b',{text:label+' '+arr.length+' · '}),arr.map(function(v){return v.name||'Someone'}).join(', ')):null;}
-      var card=h('div',{class:'card dateCard'+(best?' best':'')},
+      box.append(h('div',{class:'card dateCard'+(best?' best':'')},
         h('div',{class:'dblock'},h('span',{class:'d',text:String(parts[2])}),h('span',{class:'m',text:dt.toLocaleDateString(undefined,{month:'short'})})),
-        h('div',{class:'list',style:'gap:10px'},
+        h('div',{class:'list',style:'gap:8px'},
           h('div',null,
             h('h3',{text:dt.toLocaleDateString(undefined,{weekday:'long'})+(d.time?' · '+d.time:'')}),
             d.note?h('div',{class:'meta',text:d.note}):null,
-            best?h('div',{style:'margin-top:6px'},h('span',{class:'chip sig',text:'Best so far'})):null),
-          h('div',{class:'votes'},vb('yes','Yes'),vb('maybe','Maybe'),vb('no','Can’t','no')),
-          h('div',{class:'who'},names('Yes',s.yes),names('Maybe',s.maybe),names('Can’t',s.no),(!s.yes.length&&!s.maybe.length&&!s.no.length)?'No answers yet':null),
+            best?h('div',null,h('span',{class:'chip sig',text:'Best so far'})):null),
+          h('div',{class:'votes'},vb('yes','Yes'),vb('maybe','Maybe'),vb('no',"Can't",'no')),
+          h('div',{class:'who'},names('Yes',s.yes),names('Maybe',s.maybe),names("Can't",s.no),(!s.yes.length&&!s.maybe.length&&!s.no.length)?'No votes yet':null),
           canDelete(d)?h('div',{class:'row'},delBtn(function(){delWithVotes('dates',d.id,'votes','dateId')})):null
-        ));
-      box.append(card);
+        )));
     });
   }
 
   var STATUS={idea:'Idea',building:'Building',working:'Working'};
   function renderProjects(){
     var box=$('projects-list');box.textContent='';
-    if(!loaded.projects){box.append(empty('Loading the board','Fetching what everyone has added.'));return;}
+    if(!loaded.projects){box.append(empty('Loading','Fetching builds.'));return;}
     var items=S.projects.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
-    if(!items.length){box.append(empty('Nothing on the board yet','Add the first thing you built or are building. A rough idea counts.'));return;}
+    if(!items.length){box.append(empty('No builds yet','Add one when you have something to show. A rough start counts.'));return;}
     items.forEach(function(p){
       var url=safeUrl(p.link);
       box.append(h('div',{class:'card'},
         h('div',{class:'row'},
           h('span',{class:'chip'+(p.status==='working'?' ok':p.status==='building'?' sig':''),text:STATUS[p.status]||'Idea'}),
           p.industry?h('span',{class:'chip',text:p.industry}):null,
-          p.demo?h('span',{class:'chip ok',text:'Will demo'}):null),
+          p.demo?h('span',{class:'chip ok',text:'Will show'}):null),
         h('h3',{text:p.title}),
         p.what?h('p',{text:p.what}):null,
         url?h('a',{class:'link',href:url,target:'_blank',rel:'noopener noreferrer',text:host(url)}):null,
@@ -341,12 +377,12 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
 
   function renderIdeas(){
     var box=$('ideas-list');box.textContent='';
-    if(!loaded.ideas||!loaded.ideaVotes){box.append(empty('Loading ideas','Fetching the wall.'));return;}
+    if(!loaded.ideas||!loaded.ideaVotes){box.append(empty('Loading','Fetching ideas.'));return;}
     var items=S.ideas.map(function(i){
       var vs=S.ideaVotes.filter(function(v){return v.ideaId===i.id});
       return {i:i,n:vs.length,mine:vs.some(function(v){return v.uid===uid})};
     }).sort(function(a,b){return b.n-a.n||(b.i.ts||0)-(a.i.ts||0)});
-    if(!items.length){box.append(empty('The wall is empty','Post a problem you want AI to solve, or something you want to learn.'));return;}
+    if(!items.length){box.append(empty('No ideas yet','Post the first one. The room can vote it up.'));return;}
     items.forEach(function(x){
       var i=x.i;
       box.append(h('div',{class:'card ideaCard'},
@@ -365,11 +401,12 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     };
     try{ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback);}else fallback(); }catch(e){fallback();}
   }
+  var openPrompts={};
   function renderPrompts(){
     var box=$('prompts-list');box.textContent='';
-    if(!loaded.prompts){box.append(empty('Loading prompts','Fetching the library.'));return;}
+    if(!loaded.prompts){box.append(empty('Loading','Fetching prompts.'));return;}
     var items=S.prompts.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
-    if(!items.length){box.append(empty('No prompts yet','Share one that saved you time. Others can copy it and adapt it.'));return;}
+    if(!items.length){box.append(empty('No prompts yet','Share one that saved you time. Others can copy it.'));return;}
     items.forEach(function(p){
       var pre=h('pre',{class:'body',text:p.body});
       var cp=h('button',{type:'button',class:'primary sm',text:'Copy'});
@@ -383,18 +420,37 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     });
   }
 
+  function roomNames(){
+    var seen={}, out=[];
+    function add(name){
+      var n=(name||'').trim();
+      if(!n)return;
+      var k=n.toLowerCase();
+      if(seen[k])return;
+      seen[k]=1; out.push(n);
+    }
+    S.ideas.forEach(function(i){add(i.name)});
+    S.projects.forEach(function(p){add(p.name)});
+    S.prompts.forEach(function(p){add(p.name)});
+    S.dates.forEach(function(d){add(d.name)});
+    S.votes.forEach(function(v){add(v.name)});
+    return out;
+  }
   function chrome(){
     var b=$('banner');
-    if(!ready){b.hidden=true;}
-    else if(!db){b.hidden=false;b.textContent='Sign in to Claude to see and add entries.';}
-    else if(!canWrite){b.hidden=false;b.textContent='You can read everything here but not add yet. Ask the organiser to invite you as an Editor.';}
-    else b.hidden=true;
-    document.querySelectorAll('fieldset.f').forEach(function(f){f.disabled=!!ready&&!writable();});
+    if(!ready||db){b.hidden=true;}
+    else {b.hidden=false;b.textContent='The board is not connected yet.';}
+    var names=roomNames();
+    $('room').textContent=names.length?('In the room ('+names.length+'): '+names.join(' · ')):'In the room: no one yet.';
+    var name=myName();
+    $('hint').textContent=name
+      ?('You are in as '+name+'. The tabs switch the board: ideas, builds, prompts, and when to meet.')
+      :'The tabs are sections, not seats. Type your name to join. All ten people use this same link and the same code.';
     var live=S.dates.filter(function(d){return d.date>=ymd(new Date())}).length;
-    $('n-dates').textContent=loaded.dates?String(live):'';
-    $('n-showtell').textContent=loaded.projects?String(S.projects.length):'';
-    $('n-ideas').textContent=loaded.ideas?String(S.ideas.length):'';
-    $('n-prompts').textContent=loaded.prompts?String(S.prompts.length):'';
+    $('n-dates').textContent=loaded.dates&&live?(' '+live):'';
+    $('n-showtell').textContent=loaded.projects&&S.projects.length?(' '+S.projects.length):'';
+    $('n-ideas').textContent=loaded.ideas&&S.ideas.length?(' '+S.ideas.length):'';
+    $('n-prompts').textContent=loaded.prompts&&S.prompts.length?(' '+S.prompts.length):'';
   }
   var raf=0;
   function render(){
@@ -402,48 +458,46 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     raf=requestAnimationFrame(function(){raf=0;renderDates();renderProjects();renderIdeas();renderPrompts();chrome();});
   }
 
-  /* ---------- tabs ---------- */
   function showTab(name){
     tab=name;
     document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected',t.dataset.tab===name?'true':'false')});
     ['dates','showtell','ideas','prompts'].forEach(function(n){$('p-'+n).hidden=(n!==name)});
+    $('here').textContent=HERE[name]||'';
     lsSet('hh_tab',name);
-    window.scrollTo(0,0);
+    if(history.replaceState)history.replaceState(null,'','#'+name);
   }
-  document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab)})});
+  document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);window.scrollTo(0,0);})});
 
-  /* ---------- forms ---------- */
   $('me-name').value=lsGet('hh_name')||'';
-  $('me-name').addEventListener('input',function(){lsSet('hh_name',myName())});
+  $('me-name').addEventListener('input',function(){lsSet('hh_name',myName());chrome();});
 
   $('dates-form').addEventListener('submit',async function(e){
     e.preventDefault();if(needName())return;
     var date=$('d-date').value;if(!date)return;
     var ok=await add('dates',{date:date,time:$('d-time').value||'',note:($('d-note').value||'').trim(),name:myName(),uid:uid,ts:ts()});
-    if(ok){e.target.reset();$('dates-add').open=false;toast('Date added. Mark your own answer.');}
+    if(ok){e.target.reset();toast('Time added. Vote on it.');}
   });
   $('projects-form').addEventListener('submit',async function(e){
     e.preventDefault();if(needName())return;
     var title=($('p-title').value||'').trim();if(!title)return;
     var link=($('p-link').value||'').trim();
     var ok=await add('projects',{title:title,industry:($('p-ind').value||'').trim(),status:$('p-status').value,what:($('p-what').value||'').trim(),link:safeUrl(link)?link:'',demo:$('p-demo').checked,name:myName(),uid:uid,ts:ts()});
-    if(ok){e.target.reset();e.target.closest('details').open=false;toast('Added to the board.');}
+    if(ok){e.target.reset();toast('Build added.');}
   });
   $('ideas-form').addEventListener('submit',async function(e){
     e.preventDefault();if(needName())return;
     var text=($('i-text').value||'').trim();if(!text)return;
     var ok=await add('ideas',{text:text,name:myName(),uid:uid,ts:ts()});
-    if(ok){e.target.reset();e.target.closest('details').open=false;toast('Idea posted.');}
+    if(ok){e.target.reset();toast('Idea posted.');}
   });
   $('prompts-form').addEventListener('submit',async function(e){
     e.preventDefault();if(needName())return;
     var title=($('r-title').value||'').trim(),body=($('r-body').value||'').trim();if(!title||!body)return;
     var ok=await add('prompts',{title:title,tool:($('r-tool').value||'').trim(),body:body,name:myName(),uid:uid,ts:ts()});
-    if(ok){e.target.reset();e.target.closest('details').open=false;toast('Shared.');}
+    if(ok){e.target.reset();toast('Prompt shared.');}
   });
 
-  /* ---------- boot ---------- */
-  var last='',openPrompts={},offlineToldOnce=false;
+  var last='',offlineToldOnce=false;
   function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
   async function call(op,body){
     var r;
@@ -485,9 +539,9 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   $('me-code').addEventListener('input',function(){lsSet('hh_code',($('me-code').value||'').trim())});
   async function init(){
     var h0=(location.hash||'').replace('#','');
-    var start=['dates','showtell','ideas','prompts'].indexOf(h0)>-1?h0:(lsGet('hh_tab')||'dates');
-    if(['dates','showtell','ideas','prompts'].indexOf(start)<0)start='dates';
-    showTab(start);window.scrollTo(0,0);
+    var start=['dates','showtell','ideas','prompts'].indexOf(h0)>-1?h0:(lsGet('hh_tab')||'ideas');
+    if(['dates','showtell','ideas','prompts'].indexOf(start)<0)start='ideas';
+    showTab(start);
     uid=localId();db=makeDb();ready=true;
     render();
     await refresh();
