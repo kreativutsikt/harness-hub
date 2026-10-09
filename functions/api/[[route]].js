@@ -1,5 +1,5 @@
 // Cloudflare Pages Function. Storage: D1 binding "DB". Optional secret: GROUP_CODE (gates writes).
-const COLLS = ['dates', 'votes', 'projects', 'ideas', 'ideaVotes', 'prompts', 'links'];
+const COLLS = ['dates', 'votes', 'projects', 'ideas', 'ideaVotes', 'prompts', 'links', 'comments'];
 const MAX_DOC = 6000;
 const MAX_ROWS = 5000;
 const MAX_HTML = 500000;

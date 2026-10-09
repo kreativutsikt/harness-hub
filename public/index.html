@@ -140,6 +140,12 @@ form.composer{display:flex;flex-direction:column;gap:10px;border:1px solid var(-
 .dateCard.best{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
 .votes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
 .votes button{min-width:0}
+.thread{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:8px;min-width:0}
+.note{font-size:14px;overflow-wrap:anywhere;min-width:0}
+.note.row>span{flex:1;min-width:0}
+.note b{font-weight:600;color:var(--fg)}
+.reply{display:flex;gap:8px;min-width:0}
+.reply input{flex:1;min-width:0}
 .votes button{background:var(--field);border:1px solid var(--line);color:var(--fg)}
 .votes button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--accent-fg)}
 .votes button.no[aria-pressed="true"]{background:var(--hot);border-color:var(--hot);color:var(--bg)}
@@ -152,7 +158,7 @@ form.composer{display:flex;flex-direction:column;gap:10px;border:1px solid var(-
 }
 .up button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--accent-fg)}
 .up .n{font-size:15px}
-.ideaCard{display:grid;grid-template-columns:52px 1fr;gap:12px}
+.ideaCard{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px}
 pre.body{margin:0;padding:12px;background:var(--field);border:1px solid var(--line);font:13px/1.5 var(--font);white-space:pre-wrap;overflow-wrap:anywhere}
 main > section[role="tabpanel"]{scroll-margin-top:132px}
 details.prompt>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:6px}
@@ -287,8 +293,8 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
 
 <script>
 (function(){
-  var COLLS=['dates','votes','projects','ideas','ideaVotes','prompts','links'];
-  var S={dates:[],votes:[],projects:[],ideas:[],ideaVotes:[],prompts:[],links:[]};
+  var COLLS=['dates','votes','projects','ideas','ideaVotes','prompts','links','comments'];
+  var S={dates:[],votes:[],projects:[],ideas:[],ideaVotes:[],prompts:[],links:[],comments:[]};
   var loaded={};
   var db=null,uid=null,canWrite=true,isAdmin=false,ready=false;
   var tab='ideas';
@@ -391,6 +397,53 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
   }
 
   function canDelete(item){return writable()&&(isAdmin||item.uid===uid)}
+  function itemComments(coll,id){
+    return (S.comments||[]).filter(function(c){return c.parent===coll&&c.parentId===id}).sort(function(a,b){return (a.ts||0)-(b.ts||0)});
+  }
+  async function delComments(coll,id){
+    var cs=itemComments(coll,id);
+    for(var i=0;i<cs.length;i++) await del('comments',cs[i].id);
+  }
+  var commentOpen={}, commentDraft={}, commentFocus='';
+  function commentThread(coll,id){
+    var key=coll+':'+id;
+    var list=itemComments(coll,id);
+    var open=!!commentOpen[key];
+    var box=h('div',{class:'thread'});
+    list.forEach(function(c){
+      box.append(h('div',{class:'note row end'},
+        h('span',null,h('b',{text:(c.name||'Someone')+': '}),h('span',{text:c.text||''})),
+        canDelete(c)?delBtn(function(){del('comments',c.id)}):null
+      ));
+    });
+    var toggle=h('button',{type:'button',class:'ghost sm','aria-expanded':open?'true':'false',text:open?'Hide':(list.length?('Comment ('+list.length+')'):'Comment')});
+    toggle.addEventListener('click',function(){
+      commentOpen[key]=!open;
+      commentFocus=commentOpen[key]?key:'';
+      render();
+    });
+    var input=h('input',{type:'text',maxlength:'400',placeholder:myName()?('Comment as '+myName()):'Type your name at the top first','aria-label':'Comment'});
+    if(commentDraft[key]) input.value=commentDraft[key];
+    input.addEventListener('input',function(){commentDraft[key]=input.value;});
+    input.addEventListener('focus',function(){commentFocus=key;});
+    input.addEventListener('blur',function(ev){if(ev.relatedTarget&&commentFocus===key)commentFocus='';});
+    var form=h('form',{class:'reply',hidden:open?null:true},
+      input,
+      h('button',{type:'submit',class:'primary sm',text:'Post',disabled:!writable()})
+    );
+    form.addEventListener('submit',async function(e){
+      e.preventDefault();
+      if(needName())return;
+      var text=(input.value||'').trim();
+      if(!text)return;
+      commentOpen[key]=true;
+      var ok=await add('comments',{parent:coll,parentId:id,text:text.slice(0,400),name:myName(),uid:uid,ts:ts()});
+      if(ok) commentDraft[key]='';
+    });
+    box.append(toggle, form);
+    if(open&&commentFocus===key) requestAnimationFrame(function(){input.focus();});
+    return box;
+  }
   function delBtn(fn){
     var b=h('button',{class:'ghost sm',type:'button',text:'Delete'});var armed=false,t;
     b.addEventListener('click',function(){
@@ -452,7 +505,8 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
         h('h3',{text:p.title}),
         p.what?h('p',{text:p.what}):null,
         url?h('a',{class:'link',href:url,target:'_blank',rel:'noopener noreferrer',text:host(url)}):null,
-        h('div',{class:'row end'},h('span',{class:'meta',text:'by '+(p.name||'Someone')}),canDelete(p)?delBtn(function(){del('projects',p.id)}):null)
+        h('div',{class:'row end'},h('span',{class:'meta',text:'by '+(p.name||'Someone')}),canDelete(p)?delBtn(function(){delComments('projects',p.id);del('projects',p.id)}):null),
+        commentThread('projects',p.id)
       ));
     });
   }
@@ -471,7 +525,8 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
         h('div',{class:'up'},h('button',{type:'button','aria-pressed':x.mine?'true':'false','aria-label':'Vote for this idea',disabled:!writable(),onclick:function(){toggleIdea(i.id)}},h('span',{text:'▲'}),h('span',{class:'n',text:String(x.n)}))),
         h('div',{class:'list',style:'gap:8px'},
           h('p',{text:i.text}),
-          h('div',{class:'row end'},h('span',{class:'meta',text:'by '+(i.name||'Someone')}),canDelete(i)?delBtn(function(){delWithVotes('ideas',i.id,'ideaVotes','ideaId')}):null))
+          h('div',{class:'row end'},h('span',{class:'meta',text:'by '+(i.name||'Someone')}),canDelete(i)?delBtn(function(){delComments('ideas',i.id);delWithVotes('ideas',i.id,'ideaVotes','ideaId')}):null),
+          commentThread('ideas',i.id))
       ));
     });
   }
@@ -497,7 +552,8 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
         h('details',{class:'prompt',open:openPrompts[p.id]?true:null,ontoggle:function(ev){openPrompts[p.id]=ev.currentTarget.open}},
           h('summary',null,h('h3',{text:p.title}),h('div',{class:'meta'},p.tool?h('span',{class:'chip',text:p.tool}):null,h('span',{text:'by '+(p.name||'Someone')}))),
           pre,
-          h('div',{class:'row end',style:'margin-top:10px'},cp,canDelete(p)?delBtn(function(){del('prompts',p.id)}):null))
+          h('div',{class:'row end',style:'margin-top:10px'},cp,canDelete(p)?delBtn(function(){delComments('prompts',p.id);del('prompts',p.id)}):null)),
+        commentThread('prompts',p.id)
       ));
     });
   }
@@ -540,7 +596,8 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
       item.note?h('p',{text:item.note}):null,
       h('div',{class:'row end'},
         h('span',{class:'meta',text:(host(url)||'')+(preview?'':' · by '+(item.name||'Someone'))}),
-        (!preview&&canDelete(item))?delBtn(function(){del('links',item.id)}):null)
+        (!preview&&canDelete(item))?delBtn(function(){delComments('links',item.id);del('links',item.id)}):null),
+      preview?null:commentThread('links',item.id)
     ));
     return card;
   }
@@ -614,6 +671,7 @@ a.link{color:var(--accent);overflow-wrap:anywhere}
     S.projects.forEach(function(p){add(p.name)});
     S.prompts.forEach(function(p){add(p.name)});
     S.links.forEach(function(p){add(p.name)});
+    S.comments.forEach(function(c){add(c.name)});
     S.dates.forEach(function(d){add(d.name)});
     S.votes.forEach(function(v){add(v.name)});
     return out;
